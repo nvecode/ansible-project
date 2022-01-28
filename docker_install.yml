@@ -1,0 +1,76 @@
+---
+- name: Preconfig
+  hosts: demo
+  tasks:
+    - name: FULL INSTALL DOCKER
+      block:
+        - name: Install dop packeges
+          apt:
+            name:
+              - ca-certificates
+              - curl
+              - gnupg
+              - lsb-release
+            update_cache: true
+            cache_valid_time: 86400
+
+        - name: Add Docker Key
+          apt_key:
+            url: https://download.docker.com/linux/debian/gpg
+            state: present
+            keyring: /usr/share/keyrings/docker-archive-keyring.gpg
+
+        - name: Arh Linux
+          shell: dpkg --print-architecture
+          register: deb_architecture
+        
+        - name: Release Linux
+          shell: lsb_release -cs
+          register: deb_release
+
+        - name: Install stable repo
+          apt_repository:
+            repo: "deb [arch={{ deb_architecture.stdout }} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian {{ deb_release.stdout }} stable"
+            state: present
+            update_cache: true
+            filename: docker
+            
+        - name: Install packege Docker-CE
+          apt:
+            name: docker-ce
+            update_cache: true
+
+        - name: state check
+          service:
+            name: docker
+            state: restarted
+            enabled: true
+      become: true
+      
+    - name: FULL INSTALL DOCKER-COMPOSE
+      block:
+        - name: get last version docker-compose
+          uri:
+            url: https://api.github.com/repos/docker/compose/releases/latest
+            body_format: json
+          register: page
+
+        - name: install docker-compose
+          get_url:
+            url: "https://github.com/docker/compose/releases/download/{{ page.json.tag_name }}/docker-compose-linux-x86_64"
+            dest: /usr/local/bin/docker-compose
+            mode: 0755
+      become: true
+
+    - name: End install
+      block:
+        - name: add user group docker
+          user:
+            name: "{{ ansible_user }}"
+            groups: docker
+            append: true
+          become: yes
+
+        - name: reboot server
+          reboot:
+            reboot_timeout: 600
