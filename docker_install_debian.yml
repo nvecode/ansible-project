@@ -2,9 +2,9 @@
 - name: Preconfig
   hosts: demo
   tasks:
-    - name: FULL INSTALL DOCKER
+    - name: INSTALL DOCKER
       block:
-        - name: Install dop packeges
+        - name: Install packeges
           apt:
             name:
               - ca-certificates
@@ -20,15 +20,15 @@
             state: present
             keyring: /usr/share/keyrings/docker-archive-keyring.gpg
 
-        - name: Arh Linux
+        - name: Get architecture linux
           shell: dpkg --print-architecture
           register: deb_architecture
         
-        - name: Release Linux
+        - name: Get release linux
           shell: lsb_release -cs
           register: deb_release
 
-        - name: Install stable repo
+        - name: Add stable repo
           apt_repository:
             repo: "deb [arch={{ deb_architecture.stdout }} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian {{ deb_release.stdout }} stable"
             state: present
@@ -47,7 +47,7 @@
             enabled: true
       become: true
       
-    - name: FULL INSTALL DOCKER-COMPOSE
+    - name: INSTALL DOCKER-COMPOSE
       block:
         - name: get last version docker-compose
           uri:
@@ -55,7 +55,7 @@
             body_format: json
           register: page
 
-        - name: install docker-compose
+        - name: Install docker-compose
           get_url:
             url: "https://github.com/docker/compose/releases/download/{{ page.json.tag_name }}/docker-compose-linux-x86_64"
             dest: /usr/local/bin/docker-compose
@@ -69,8 +69,9 @@
             name: "{{ ansible_user }}"
             groups: docker
             append: true
-          become: yes
+          become: true
 
-        - name: reboot server
+        - name: Reboot server
           reboot:
             reboot_timeout: 600
+          become: true
