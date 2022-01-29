@@ -73,5 +73,5 @@
 
         - name: Reboot server
           reboot:
-            reboot_timeout: 600
+            reboot_timeout: 300
           become: true
