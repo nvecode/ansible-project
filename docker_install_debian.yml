@@ -28,7 +28,7 @@
           shell: lsb_release -cs
           register: deb_release
 
-        - name: Add stable repository
+        - name: Add stable repo
           apt_repository:
             repo: "deb [arch={{ deb_architecture.stdout }} signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian {{ deb_release.stdout }} stable"
             state: present
